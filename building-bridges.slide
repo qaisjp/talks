@@ -85,13 +85,17 @@ New users don't like IRC because they can't see the chat history, so I decided t
 
 * Creating puppets
 
-Creating a puppet is easy. When the bridge starts, we can map every online user on our Discord server to a newly created IRC connection.
+When the bridge starts, we create an IRC connection for every online Discord user.
 
     connections[discordUser.ID] = ircConnection
 
-When one of these Discord users go offline, we can close the connection and clear the mapping.
+When one of these Discord users go offline, we can close the connection.
 
 When they come online, we can simply (re)create the connection.
+
+
+.image building-bridges/img/discord-online.gif 250 _
+.caption When I appear online on Discord, a `qaisjp~d` irc puppet is created.
 
 * Creating puppets
 
@@ -103,29 +107,31 @@ Puppeting leads to the following tasks:
 
 * irc nickname normalisation
 
-irc usernames support pretty much just `[A-Za-z_]`, whereas Discord supports special characters, so nicknames MUST be normalised, otherwise we might drop connections.
+irc usernames support pretty much just `[A-Za-z_]`, whereas Discord supports special characters
+
+: irc usernames are pretty much just alphanumeric, so we have to normalise Discord usernames, otherwise we might drop connections.
 
 We have a set of valid characters, so we replace all illegal characters with a single whitespace character.
 
-    // Replace bad characters with underscores
     newNick := []byte(nick)
-	for i, c := range []byte(nick) {
-		if !isNickChar(c) || isFakeNickChar(c) {
-			newNick[i] = ' '
-		}
-	}
+    for i, c := range []byte(nick) {
+        if !isNickChar(c) || isFakeNickChar(c) {
+            newNick[i] = ' '
+        }
+    }
 
 And then we replace all sequences of spaces with a single underscore character.
 
 	newNick = regexp.MustCompile(` +`).ReplaceAllLiteral(newNick, []byte{'_'})
 
-This has the effect of converting a username like `Test^*(User` to `Test_User`, instead of `Test___User`
+This has the positive effect of converting a username like `Test!@$User`
+to `Test_User` (1 underscore), instead of `Test___User` (3 underscores).
 
-* Channel moderators
+* irc channel moderation: the problem
 
 IRC users are identified using _hostmasks_:
 
-    nickname!username@host
+    nickname!username@host    # The nickname and username are freely set by the irc client
 
 It can look like this if you connect from an IP without a PTR record:
 
@@ -135,7 +141,27 @@ Or this, with a PTR record:
 
     Melon@118-75-212-24.try.wideopenwest.com
 
-Channel operators (admins) can restrict user access by targeting their hostmask.
+Channel operators (admins) needs to be able to target the hostmask to restrict specific user access _without_ affecting every bridge user.
+
+But since the bridge is creating irc puppets, all of the puppets will originate from the same IP address, and therefore will share the second half of the hostmask.
+
+
+`WEBIRC` is an ircv3 extension that solves this issue.
+
+* irc channel moderation: the solution
+
+The WEBIRC command takes four or five parameters: `password`, `gateway`, `hostname`, `ip`, and `options`.
+
+- `password` Password authenticating the WebIRC gateway to the IRC server which must be agreed upon ahead of time
+- `gateway` WebIRC gateway service name
+- `hostname` User’s resolved hostname
+- `ip` IPv4 or IPv6 address of the connecting user. If the IP address cannot be resolved to a DNS name, the IP address MUST be sent as both the hostname and ip.
+
+.caption Source: [[https://ircv3.net/specs/extensions/webirc.html][ircv3.net/specs/extensions/webirc.html]]
+.caption Copyright © 2017 Evan Magaliff <[[mailto:muffinmedic@kiwiirc.com][muffinmedic@kiwiirc.com]]>
+.caption Copyright © 2017 Darren Whitlen <[[mailto:prawnsalad@kiwiirc.com][prawnsalad@kiwiirc.com]]>
+
+
 
 * Discord webhooks
 
