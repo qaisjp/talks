@@ -192,14 +192,14 @@ A few pull requests have already been sent & merged, with plenty more to come.
 
 * play example
 
-.play building-bridges/syncmap/main.go /func main/,
+# .play building-bridges/syncmap/main.go /func main/,
 
 * os.Exec
 
 Let's imagine that we have a command `getenv` that prints an environment variable
 using `os.Getenv`.
 
-.code building-bridges/exec/getenv/main.go /func main/,
+# .code building-bridges/exec/getenv/main.go /func main/,
 
 We can run it as follows:
 
@@ -210,7 +210,7 @@ We can run it as follows:
 
 What do you expect this code to print?
 
-.code building-bridges/exec/main.go /func main/,
+# .code building-bridges/exec/main.go /func main/,
 
 bar, or newbar?
 
