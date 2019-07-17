@@ -1,13 +1,17 @@
-Building bridges...
+Building bridges
 ... between IRC and Discord
 
 14:06 19 July 2019
-Tags: matterbridge, irc, discord, chat, bridges
+Tags: chatbot, irc, discord, bridges
 
 Qais Patankar
 me@qaisjp.com
 https://qais.jp
 @qaisjp
+
+* Notes
+
+If you want to follow along you can find this talk at [[slides.qais.jp]]
 
 * Background
 
@@ -19,10 +23,11 @@ I'm part of a computing club back at my home university: [[https://comp-soc.com]
 
 We have a lot of "old" people who hang out and still use IRC.
 
-New users don't like IRC because they can't see the chat history, so I decided to start a Discord server and bridge the two together!
+New users don't like IRC because they can't see the chat history, so I decided to create a Discord server and bridge the two together!
 
 .image building-bridges/img/team_chat_2x.png 300 _
 .caption _Team_Chat_ by [[https://xkcd.com/1782/][Randall Munroe]]
+.caption [[slides.qais.jp]]
 
 * What's IRC?
 
@@ -52,9 +57,9 @@ Discord is like Slack but catered towards online communities.
 
 *Why*not*Slack?*
 
-- You need an account per workspace
-- No open/public invites (until a few years ago)
-- The free tier is inflexible and has a limited chat history
+- you need an account per workspace
+- no open/public invites (until a few years ago)
+- the free tier is inflexible and has a limited chat history
 
 .image https://discordapp.com/assets/fc0b01fe10a0b8c602fb0106d8189d9b.png _ 300
 
@@ -95,35 +100,61 @@ When they come online, we can simply (re)create the connection.
 .image building-bridges/img/discord-online.gif 250 _
 .caption When I appear online on Discord, a `qaisjp~d` irc puppet is created.
 
-* Creating puppets
+* Challenges
 
-Puppeting leads to the following tasks:
+Puppeting leads to the following challenges:
 
-- irc nickname normalization
-- irc channel moderation (how can an IRC operator moderate Discord users without permissions on Discord?)
-- discord webhook management
+- *nickname*normalization*: dealing with special characters in nicknames
+- *moderation*: how can irc ops moderate Discord users without Discord permissions?
+- *discord*webhook*management*: making it look pretty on Discord too
+- *nickalert/mentions*conversion*: how do we ping a Discord user?
+- *converting*between*text*formats*: Markdown and IRC control codes
+- *priviliged*channel*access*: discord users should not be in every bridged channel
+
+.caption During this talk we'll only be discussing the first three challenges. Feel free to ask me about the others!
 
 * irc nickname normalisation
 
-irc usernames support pretty much just `[A-Za-z_]`, whereas Discord supports special characters
+irc usernames support pretty much just `[A-Za-z_]`, whereas Discord supports special characters. Lets take this username:
 
-: irc usernames are pretty much just alphanumeric, so we have to normalise Discord usernames, otherwise we might drop connections.
+: irc usernames are pretty much just alphanumeric, so we have to normalise Discord usernames, otherwise we might drop connections. Lets take this username
 
-We have a set of valid characters, so we replace all illegal characters with a single whitespace character.
+    Test!@$User
 
-    newNick := []byte(nick)
-    for i, c := range []byte(nick) {
-        if !isNickChar(c) || isFakeNickChar(c) {
-            newNick[i] = ' '
-        }
-    }
+If we replace all invalid characters with underscore characters, we'll be left with a username containing three underscores
 
-And then we replace all sequences of spaces with a single underscore character.
+    Test___User    # not visually clean!
+
+So we instead replace all illegal characters with a single whitespace character. And then we replace all sequences of spaces with a single underscore character.
 
 	newNick = regexp.MustCompile(` +`).ReplaceAllLiteral(newNick, []byte{'_'})
 
-This has the positive effect of converting a username like `Test!@$User`
-to `Test_User` (1 underscore), instead of `Test___User` (3 underscores).
+Leaving us with just `Test_User`. We tack on `~d` to the end so that Discord users can be differentiated from IRC users.
+
+    Test_User~d
+
+* irc nickname normalisation: edge case
+
+What if we have two Discord users with similar names?
+
+    Test!!!User
+    Test$$$User
+
+Both of these normalise to `Test_User`. But IRC nicknames must be unique!
+
+*Solution:* fallback on discriminator
+
+Since Discord usernames aren't unique, Discord assigns each user a four digit suffix
+
+    qaisjp        # `username`               (not globally unique)
+    qaisjp#7247   # `username#discriminator` (globally unique)
+
+So if two nicknames clash, we simply connect to IRC using the four digit suffix
+
+    Test_User~1234~d
+    Test_User~9876~d
+
+.caption There's also a "server specific nickname", not mentioned here for simplicity
 
 * irc channel moderation: the problem
 
@@ -131,51 +162,106 @@ IRC users are identified using _hostmasks_:
 
     nickname!username@host    # The nickname and username are freely set by the irc client
 
-It can look like this if you connect from an IP without a PTR record:
+Hostmasks are derived from your IP address when you connect:
 
-    bob!hexchat@209.85.128.1
-
-Or this, with a PTR record:
-
-    Melon@118-75-212-24.try.wideopenwest.com
+    alice!hexchat@209.85.128.1    # without a PTR record
+    bob!robert@118-75-212-24.try.wideopenwest.com    # with a PTR record
 
 Channel operators (admins) needs to be able to target the hostmask to restrict specific user access _without_ affecting every bridge user.
 
-But since the bridge is creating irc puppets, all of the puppets will originate from the same IP address, and therefore will share the second half of the hostmask.
-
+But since the bridge creates the irc puppets, all of them will have the same IP address, and therefore will share the second half of the hostmask.
 
 `WEBIRC` is an ircv3 extension that solves this issue.
 
 * irc channel moderation: the solution
 
-The WEBIRC command takes four or five parameters: `password`, `gateway`, `hostname`, `ip`, and `options`.
+The `WEBIRC` command must be the first command sent to an IRC server.
 
-- `password` Password authenticating the WebIRC gateway to the IRC server which must be agreed upon ahead of time
-- `gateway` WebIRC gateway service name
-- `hostname` User’s resolved hostname
-- `ip` IPv4 or IPv6 address of the connecting user. If the IP address cannot be resolved to a DNS name, the IP address MUST be sent as both the hostname and ip.
+(Think HTTP's `X-Forwarded-For`, but for IRC.)
 
+*Parameters*
+
+- `gateway`: WebIRC gateway service name
+- `password`: authenticates the WebIRC gateway to the IRC server
+- `ip`: address of the connecting user
+- `hostname`: user’s resolved hostname
+
+: this password is agreed upon ahead of time, and is necessary to ensure that only the gateway (bridge) is authorised to provide source IP addresses.
+
+.image building-bridges/img/ircv3-logo-forwhite.svg _ 200
 .caption Source: [[https://ircv3.net/specs/extensions/webirc.html][ircv3.net/specs/extensions/webirc.html]]
-.caption Copyright © 2017 Evan Magaliff <[[mailto:muffinmedic@kiwiirc.com][muffinmedic@kiwiirc.com]]>
-.caption Copyright © 2017 Darren Whitlen <[[mailto:prawnsalad@kiwiirc.com][prawnsalad@kiwiirc.com]]>
+.caption Copyright © 2017 Evan Magaliff <muffinmedic@kiwiirc.com>, Darren Whitlen <prawnsalad@kiwiirc.com>
 
+* Using WEBIRC: providing a private IPv6 address
 
+Discord users/mods don't get access to user IP addresses & usernames can be changed, so we cannot rely on usernames/discriminators (`qaisjp#7247`)
 
-* Discord webhooks
+: per Discord user.
 
-Discord webhooks allow us to 
+: Discord usernames can be changed, so we cannot rely on usernames/discriminators
 
-* go-discord-irc
+We can still rely on user IDs. Mine looks like this: `83386293446246400`
+
+So we include it in the hostname: `$userID.bot.discord` or `$userID.user.discord`
+
+And convert the user ID to a [[https://en.wikipedia.org/wiki/Unique_local_address][unique local address]]:
+
+    Base IP for bots: "fd75:f5f5:226f:2", or users: "fd75:f5f5:226f:1"
+
+    Format uint64 as hexadecimal, then left pad (16 chars) 
+        83386293446246400 -> 1283f6460000000 -> 01283f6460000000
+    
+    Insert a colon every four places (actually, where i%4 == 0)
+        :0128:3f64:6000:0000
+
+    Append to the base address
+        fd75:f5f5:226f:1:0128:3f64:6000:0000
+
+.caption User IDs use the `snowflake` format. It's out of scope for this talk, but they were [[https://github.com/twitter-archive/snowflake/tree/snowflake-2010][created by Twitter]] and are [[https://discordapp.com/developers/docs/reference#snowflakes][pretty cool]].
+
+* Discord
+: So we've been talking a lot of about IRC. 
+
+.image building-bridges/img/discord-to-irc.png 300 _
+.caption Messages on Discord show up on IRC.
+
+What about the other direction?
+
+* Webhooks!
+
+Discord allows you to create bots, but only using their bot API.
+ 
+It's against their Terms of Service to automate regular user accounts. So we need to instead make use of webhooks to send messages _as_other_users_.
+
+: It's fairly straightforward: when the bridge is started we create a webhook per-channel, and then assign the `username`, `content` and `avatar` fields.
+
+.image building-bridges/img/irc-to-discord-cropped.gif 380 _
+.caption top: IRC, bottom: Discord
+
+# * Webhooks
+# 
+# Discord allows you to create bots, but only through their bot API.
+# 
+# It's against their Terms of Service to automate regular user accounts. So we need to instead make use of webhooks to send messages _as_other_users_.
+# 
+# Challenges, in a nutshell:
+# - webhooks must be first registered to a channel before you can start using them
+# - we can use the bot API to create webhooks
+# - you can 
+# - working around some Android bugs
+
+# .image building-bridges/img/webhook.png
+
+* All these features can be found in go-discord-irc
+
+: All those features can be found in "go-discord-irc", which is a project that I started about two years ago, in May 2017.
 
 .image building-bridges/img/github-qaisjp-repo.png _ 875
 
-* Mentions conversion
 
-* There's more stuff here too
+* What's next?
 
-- 
-
-* What next?
+: What next? Don't use go-discord-irc.
 
 * matterbridge, a superior chat bridge created by 42wim.
 
@@ -188,70 +274,6 @@ It's supports loads of different platforms, not just Slack and Discord.
 
 A few pull requests have already been sent & merged, with plenty more to come.
 
-* play example
-
 # .play building-bridges/syncmap/main.go /func main/,
-
-* os.Exec
-
-Let's imagine that we have a command `getenv` that prints an environment variable
-using `os.Getenv`.
-
 # .code building-bridges/exec/getenv/main.go /func main/,
-
-We can run it as follows:
-
-    $ foo=bar getenv foo
-    bar
-
-* os.Exec
-
-What do you expect this code to print?
-
-# .code building-bridges/exec/main.go /func main/,
-
-bar, or newbar?
-
-* another Twitter poll
-
-.image building-bridges/img/exec-poll.png _ 600
-.caption [[https://twitter.com/francesc/status/863791506934472705][Twitter poll]]
-
-* os.Exec
-
-Better error messaging for Allman style braces.
-
-    package main
-
-    func main()
-    {
-        fmt.Println("that ain't gonna compile")
-    }
-
-With go 1.8:
-
-    fail/main.go:4: syntax error: unexpected semicolon or newline before {
-
-With go 1.9:
-
-    fail/main.go:3:6: missing function body for "main"
-    fail/main.go:4:1: syntax error: unexpected semicolon or newline before {
-
-* stuff
-
-`vendor` directories are ignored by the `go` tool [[https://golang.org/issue/19090][#19090]]:
-
-    go test ./...
-
-You can now list all the tests to be executed, without running them [[https://golang.org/issue/17209][#17209]].
-
-	$ go test -test.list .
-    TestIntegration
-    TestEmbedStreams
-    TestEmbedFiles
-
-You can now link to fields in a struct in the documentation [[https://golang.org/issue/16753][#16753]].
-
-.link https://tip.golang.org/pkg/net/http/#Client.Transport
-
-_Note_: This was actually introduced with Go 1.8!
+# .link https://tip.golang.org/pkg/net/http/#Client.Transport
