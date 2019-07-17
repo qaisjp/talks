@@ -15,15 +15,15 @@ If you want to follow along you can find this talk at [[slides.qais.jp]]
 
 * Background
 
-: I'm part of a computing club back at my home university. There are a lot of former students who hang out on IRC and share useful advice, but it's difficult to get new students to join, and because of the chat history problem, even harder to get them to stay.
-: 
-: So I started a Discord server and decided to bridge the two!
-
 I'm part of a computing club back at my home university: [[https://comp-soc.com][CompSoc Edinburgh]].
+
+: I'm part of a computing club back at my home university. There's a lot of alumni who hang out on IRC and share useful advice. Now that's great, but it's difficult to convince new students to join, and there's one big issue with IRC that makes it harder for them to stay.
 
 We have a lot of "old" people who hang out and still use IRC.
 
 New users don't like IRC because they can't see the chat history, so I decided to create a Discord server and bridge the two together!
+
+: So I started a Discord server and decided to bridge the two!
 
 .image building-bridges/img/team_chat_2x.png 300 _
 .caption _Team_Chat_ by [[https://xkcd.com/1782/][Randall Munroe]]
@@ -31,9 +31,9 @@ New users don't like IRC because they can't see the chat history, so I decided t
 
 * What's IRC?
 
-: Most of the developers here will be familiar with IRC. It's basically a protocol for chatting with other people either in channels or direct private messaging.
+: Most of the developers here will be familiar with IRC. It's basically a protocol for chatting with others either directly or in channels.
 : 
-: You don't get access to full chat history on IRC. You'll only get chat history if you use an intermediary that will relay messages back to you when you wake up.
+: The big issue with IRC is that you don't get access to full chat history. The only way to see the chat history is if you use an intermediary server that relay messages back to you when you wake up.
 
 Internet Relay Chat, a protocol for chatting on the internet.
 
@@ -46,8 +46,9 @@ If you want to receive messages whilst disconnected, you need to use a bouncer.
 
 * What's Discord?
 
-: Or.... just use something else. So a lot of online communities have just flocked to Discord.
 : Discord is basically Slack but it's invite link system and free chat history makes it more attractive to online communities.
+: 
+: Plus, it's got a pretty great permissions system.
 
 Discord is like Slack but catered towards online communities.
 
@@ -63,14 +64,23 @@ Discord is like Slack but catered towards online communities.
 
 .image https://discordapp.com/assets/fc0b01fe10a0b8c602fb0106d8189d9b.png _ 300
 
-: Discord is like Slack, but it's more... open, and it's free.
-: It's built with gaming communities in mind, so it integrates an invite system and streamlined permission system.
-: 
-: Oh and when I say "guild", I basically mean a "discord server", which is equivalent to a Slack workspace or team.
+# : Discord is like Slack, but it's more... open, and it's free.
+# : It's built with gaming communities in mind, so it integrates an invite system and streamlined permission system.
+# : 
+# : Oh and when I say "guild", I basically mean a "discord server", which is equivalent to a Slack workspace or team.
 
 * Existing bridges
 
+: So lets talk about what existing bridges do
+
 * 
+
+: this is a picture of IRCCloud, which is an online IRC client that also behaves a bit like a bouncer. 
+: 
+: When someone on Discord sends a messsage, the bot sends the same message to IRC using its IRC bot connection.
+: So that's why it shows up as IRC here.
+: 
+: Similarly when Eve (on IRC) sends a message, it's sent to everyone in the IRC channel, including DiscordBot.
 
 .background building-bridges/img/irc-conversation-annotated.png
 # .image building-bridges/img/irc-conversation-annotated.png 500 _
@@ -78,13 +88,16 @@ Discord is like Slack but catered towards online communities.
 
 * A typical bridged channel (discord)
 
-.image building-bridges/img/discord-conversation.png 300 _
+: So the bot on Discord then, named "irc", sends messages in the corresponding Discord channel.
 
+.image building-bridges/img/discord-conversation.png 300 _
 .caption the bot named "irc" sends messages with a username prefix `<Eve>`
 
 # .caption "discord guild" = "discord server" (= "slack workspace")
 
 * We can do better: puppeting
+
+: but we can do better by puppeting
 
 * Creating puppets
 
