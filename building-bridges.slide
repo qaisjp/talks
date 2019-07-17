@@ -9,6 +9,21 @@ me@qaisjp.com
 https://qais.jp
 @qaisjp
 
+* Background
+
+: I'm part of a computing club back at my home university. There are a lot of former students who hang out on IRC and share useful advice, but it's difficult to get new students to join, and because of the chat history problem, even harder to get them to stay.
+: 
+: So I started a Discord server and decided to bridge the two!
+
+I'm part of a computing club back at my home university: [[https://comp-soc.com][CompSoc Edinburgh]].
+
+We have a lot of "old" people who hang out and still use IRC.
+
+New users don't like IRC because they can't see the chat history, so I decided to start a Discord server and bridge the two together!
+
+.image building-bridges/img/team_chat_2x.png 300 _
+.caption _Team_Chat_ by [[https://xkcd.com/1782/][Randall Munroe]]
+
 * What's IRC?
 
 : Most of the developers here will be familiar with IRC. It's basically a protocol for chatting with other people either in channels or direct private messaging.
@@ -47,23 +62,6 @@ Discord is like Slack but catered towards online communities.
 : It's built with gaming communities in mind, so it integrates an invite system and streamlined permission system.
 : 
 : Oh and when I say "guild", I basically mean a "discord server", which is equivalent to a Slack workspace or team.
-
-
-* Background
-
-: I'm part of a computing club back at my home university. There are a lot of former students who hang out on IRC and share useful advice, but it's difficult to get new students to join, and because of the chat history problem, even harder to get them to stay.
-: 
-: So I started a Discord server and decided to bridge the two!
-
-I'm part of a computing club back at my home university: [[https://comp-soc.com][CompSoc Edinburgh]].
-
-We have a lot of "old" people who hang out and still use IRC.
-
-New users don't like IRC because they can't see the chat history, so I decided to start a Discord server and bridge the two together!
-
-.image building-bridges/img/team_chat_2x.png 300 _
-.caption _Team_Chat_ by [[https://xkcd.com/1782/][Randall Munroe]]
-
 
 * Existing bridges
 
