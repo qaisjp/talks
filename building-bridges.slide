@@ -1,0 +1,233 @@
+Building bridges...
+... between IRC and Discord
+
+14:06 19 July 2019
+Tags: matterbridge, irc, discord, chat, bridges
+
+Qais Patankar
+me@qaisjp.com
+https://qais.jp
+@qaisjp
+
+* What's IRC?
+
+: Most of the developers here will be familiar with IRC. It's basically a protocol for chatting with other people either in channels or direct private messaging.
+: 
+: You don't get access to full chat history on IRC. You'll only get chat history if you use an intermediary that will relay messages back to you when you wake up.
+
+Internet Relay Chat, a protocol for chatting on the internet.
+
+Messages aren't persisted, so you must be connected to the server to receive them.
+
+If you want to receive messages whilst disconnected, you need to use a bouncer.
+
+.image building-bridges/img/znc.png _ 300
+.caption Source: [[https://wiki.znc.in/ZNC][ZNC]], an open-source IRC bouncer
+
+* What's Discord?
+
+: Or.... just use something else. So a lot of online communities have just flocked to Discord.
+: Discord is basically Slack but it's invite link system and free chat history makes it more attractive to online communities.
+
+Discord is like Slack but catered towards online communities.
+
+- accounts are central (on IRC each server has their own account system)
+- unlimited, persisted chat history
+- not open source
+
+*Why*not*Slack?*
+
+- You need an account per workspace
+- No open/public invites (until a few years ago)
+- The free tier is inflexible and has a limited chat history
+
+.image https://discordapp.com/assets/fc0b01fe10a0b8c602fb0106d8189d9b.png _ 300
+
+: Discord is like Slack, but it's more... open, and it's free.
+: It's built with gaming communities in mind, so it integrates an invite system and streamlined permission system.
+: 
+: Oh and when I say "guild", I basically mean a "discord server", which is equivalent to a Slack workspace or team.
+
+
+* Background
+
+: I'm part of a computing club back at my home university. There are a lot of former students who hang out on IRC and share useful advice, but it's difficult to get new students to join, and because of the chat history problem, even harder to get them to stay.
+: 
+: So I started a Discord server and decided to bridge the two!
+
+I'm part of a computing club back at my home university: [[https://comp-soc.com][CompSoc Edinburgh]].
+
+We have a lot of "old" people who hang out and still use IRC.
+
+New users don't like IRC because they can't see the chat history, so I decided to start a Discord server and bridge the two together!
+
+.image building-bridges/img/team_chat_2x.png 300 _
+.caption _Team_Chat_ by [[https://xkcd.com/1782/][Randall Munroe]]
+
+
+* Existing bridges
+
+* 
+
+.background building-bridges/img/irc-conversation-annotated.png
+# .image building-bridges/img/irc-conversation-annotated.png 500 _
+
+
+* A typical bridged channel (discord)
+
+.image building-bridges/img/discord-conversation.png 300 _
+
+.caption the bot named "irc" sends messages with a username prefix `<Eve>`
+
+# .caption "discord guild" = "discord server" (= "slack workspace")
+
+* We can do better: puppeting
+
+* Creating puppets
+
+Creating a puppet is easy. When the bridge starts, we can map every online user on our Discord server to a newly created IRC connection.
+
+    connections[discordUser.ID] = ircConnection
+
+When one of these Discord users go offline, we can close the connection and clear the mapping.
+
+When they come online, we can simply (re)create the connection.
+
+* Creating puppets
+
+Puppeting leads to the following tasks:
+
+- irc nickname normalization
+- irc channel moderation (how can an IRC operator moderate Discord users without permissions on Discord?)
+- discord webhook management
+
+* irc nickname normalisation
+
+irc usernames support pretty much just `[A-Za-z_]`, whereas Discord supports special characters, so nicknames MUST be normalised, otherwise we might drop connections.
+
+We have a set of valid characters, so we replace all illegal characters with a single whitespace character.
+
+    // Replace bad characters with underscores
+    newNick := []byte(nick)
+	for i, c := range []byte(nick) {
+		if !isNickChar(c) || isFakeNickChar(c) {
+			newNick[i] = ' '
+		}
+	}
+
+And then we replace all sequences of spaces with a single underscore character.
+
+	newNick = regexp.MustCompile(` +`).ReplaceAllLiteral(newNick, []byte{'_'})
+
+This has the effect of converting a username like `Test^*(User` to `Test_User`, instead of `Test___User`
+
+* Channel moderators
+
+IRC users are identified using _hostmasks_:
+
+    nickname!username@host
+
+It can look like this if you connect from an IP without a PTR record:
+
+    bob!hexchat@209.85.128.1
+
+Or this, with a PTR record:
+
+    Melon@118-75-212-24.try.wideopenwest.com
+
+Channel operators (admins) can restrict user access by targeting their hostmask.
+
+* Discord webhooks
+
+Discord webhooks allow us to 
+
+* go-discord-irc
+
+.image building-bridges/img/github-qaisjp-repo.png _ 875
+
+* Mentions conversion
+
+* There's more stuff here too
+
+- 
+
+* What next?
+
+* matterbridge, a superior chat bridge created by 42wim.
+
+Merge all features of [[https://github.com/qaisjp/go-discord-irc][qaisjp/go-discord-irc]] into [[https://github.com/42wim/matterbridge][42wim/matterbridge]]!
+
+.image building-bridges/img/matterbridge.gif
+.image building-bridges/img/matterbridge-caption.png 100 _
+
+It's supports loads of different platforms, not just Slack and Discord.
+
+A few pull requests have already been sent & merged, with plenty more to come.
+
+* play example
+
+.play building-bridges/syncmap/main.go /func main/,
+
+* os.Exec
+
+Let's imagine that we have a command `getenv` that prints an environment variable
+using `os.Getenv`.
+
+.code building-bridges/exec/getenv/main.go /func main/,
+
+We can run it as follows:
+
+    $ foo=bar getenv foo
+    bar
+
+* os.Exec
+
+What do you expect this code to print?
+
+.code building-bridges/exec/main.go /func main/,
+
+bar, or newbar?
+
+* another Twitter poll
+
+.image building-bridges/img/exec-poll.png _ 600
+.caption [[https://twitter.com/francesc/status/863791506934472705][Twitter poll]]
+
+* os.Exec
+
+Better error messaging for Allman style braces.
+
+    package main
+
+    func main()
+    {
+        fmt.Println("that ain't gonna compile")
+    }
+
+With go 1.8:
+
+    fail/main.go:4: syntax error: unexpected semicolon or newline before {
+
+With go 1.9:
+
+    fail/main.go:3:6: missing function body for "main"
+    fail/main.go:4:1: syntax error: unexpected semicolon or newline before {
+
+* stuff
+
+`vendor` directories are ignored by the `go` tool [[https://golang.org/issue/19090][#19090]]:
+
+    go test ./...
+
+You can now list all the tests to be executed, without running them [[https://golang.org/issue/17209][#17209]].
+
+	$ go test -test.list .
+    TestIntegration
+    TestEmbedStreams
+    TestEmbedFiles
+
+You can now link to fields in a struct in the documentation [[https://golang.org/issue/16753][#16753]].
+
+.link https://tip.golang.org/pkg/net/http/#Client.Transport
+
+_Note_: This was actually introduced with Go 1.8!
