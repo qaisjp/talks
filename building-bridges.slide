@@ -136,23 +136,23 @@ Puppeting leads to the following challenges:
 
 * irc nickname normalisation
 
-irc usernames support pretty much just `[A-Za-z0-9_]`, whereas Discord supports special characters. Lets take this username:
+irc usernames support pretty much just `[A-Za-z0-9_]`, whereas Discord supports special characters. Lets take this username: `Test!@$User`
 
-: irc usernames are pretty much just alphanumeric, so we have to normalise Discord usernames, otherwise we might drop connections. Lets take this username
+: irc usernames are pretty much just alphanumeric, so we have to normalise Discord usernames, otherwise we might drop connections. Lets take this username:
 
-    Test!@$User
-
-If we replace all invalid characters with underscore characters, we'll be left with a username containing three underscores
+Replace all invalid characters with underscore characters:
 
     Test___User    # not visually clean!
 
-So we instead replace all illegal characters with a single whitespace character. And then we replace all sequences of spaces with a single underscore character.
+: So we instead replace all illegal characters with a single whitespace character. And then we replace all sequences of spaces with a single underscore character.
+
+Replace all invalid chars with a space, then replace chunks of spaces with underscores
 
 	newNick = regexp.MustCompile(` +`).ReplaceAllLiteral(newNick, []byte{'_'})
 
-Leaving us with just `Test_User`. We tack on `~d` to the end so that Discord users can be differentiated from IRC users.
+This leaves us with just `Test_User`.
 
-    Test_User~d
+    Test_User~d    #  add `~d` to differentiate Discord puppets from IRC users
 
 * irc nickname normalisation: edge case
 
