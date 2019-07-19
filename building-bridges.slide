@@ -48,6 +48,8 @@ If you want to receive messages whilst disconnected, you need to use a bouncer.
 : Discord is basically Slack but it's invite link system and free chat history makes it more attractive to online communities.
 : 
 : Plus, it's got a pretty great permissions system.
+: 
+: Neither Discord or Slack are open source, unlike most implementations of IRC (and remember that IRC is just a protocol).
 
 Discord is like Slack but catered towards online communities.
 
@@ -63,23 +65,21 @@ Discord is like Slack but catered towards online communities.
 
 .image https://discordapp.com/assets/fc0b01fe10a0b8c602fb0106d8189d9b.png _ 300
 
-# : Discord is like Slack, but it's more... open, and it's free.
-# : It's built with gaming communities in mind, so it integrates an invite system and streamlined permission system.
-# : 
-# : Oh and when I say "guild", I basically mean a "discord server", which is equivalent to a Slack workspace or team.
-
 * Existing bridges
 
 : So lets talk about what existing bridges do
 
 * 
 
-: this is a picture of IRCCloud, which is an online IRC client that also behaves a bit like a bouncer. 
+: this is a picture of IRCCloud, which is a web-based IRC client that also behaves a bit like a bouncer.
 : 
-: When someone on Discord sends a messsage, the bot sends the same message to IRC using its IRC bot connection.
-: So that's why it shows up as IRC here.
+: The way existing bridges work is that they create an application that spawns two bots: one on IRC and one on Discord.
 : 
-: Similarly when Eve (on IRC) sends a message, it's sent to everyone in the IRC channel, including DiscordBot.
+: So DiscordBot lives on IRC. And IRCBot lives on Discord.
+: 
+: When DiscordBot hears something in an IRC channel, the bot on Discord will send the message. And vice-versa.
+: 
+: So here Alice and Bob are sending messages on Discord, and the bot on IRC sends a specially formatted message to the IRC channel.
 
 .background building-bridges/img/irc-conversation-annotated.png
 # .image building-bridges/img/irc-conversation-annotated.png 500 _
@@ -87,7 +87,8 @@ Discord is like Slack but catered towards online communities.
 
 * A typical bridged channel (discord)
 
-: So the bot on Discord then, named "irc", sends messages in the corresponding Discord channel.
+: Similarly when Eve (on IRC) sends a message, it's sent to everyone in the IRC channel, including DiscordBot.
+: The same DiscordBot from IRC hears the message, and tells the bot on Discord "irc", to send a message in the corresponding channel.
 
 .image building-bridges/img/discord-conversation.png 300 _
 .caption the bot named "irc" sends messages with a username prefix `<Eve>`
@@ -104,10 +105,13 @@ When the bridge starts, we create an IRC connection for every online Discord use
 
     connections[discordUser.ID] = ircConnection
 
+: We just map every online Discord user to a corresponding IRC connection. We create and manage that connection.
+
 When one of these Discord users go offline, we can close the connection.
 
 When they come online, we can simply (re)create the connection.
 
+: So over on the right I decide to come online on Discord, and as you can see, a puppet has joined IRC.
 
 .image building-bridges/img/discord-online.gif 250 _
 .caption When I appear online on Discord, a `qaisjp~d` irc puppet is created.
