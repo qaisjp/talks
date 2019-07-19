@@ -131,7 +131,7 @@ Puppeting leads to the following challenges:
 
 * irc nickname normalisation
 
-irc usernames support pretty much just `[A-Za-z_]`, whereas Discord supports special characters. Lets take this username:
+irc usernames support pretty much just `[A-Za-z0-9_]`, whereas Discord supports special characters. Lets take this username:
 
 : irc usernames are pretty much just alphanumeric, so we have to normalise Discord usernames, otherwise we might drop connections. Lets take this username
 
@@ -210,15 +210,12 @@ The `WEBIRC` command must be the first command sent to an IRC server.
 
 * Using WEBIRC: providing a private IPv6 address
 
-Discord users/mods don't get access to user IP addresses & usernames can be changed, so we cannot rely on usernames/discriminators (`qaisjp#7247`)
+: Discord server mods don't get access to user IP addresses & usernames can be changed, so we cannot rely on usernames/discriminators (`qaisjp#7247`)
+: Discord usernames can be changed, so we cannot use usernames/discriminators, but we can rely on user IDs.
 
-: per Discord user.
+We can't use IP addresses or usernames but user IDs are OK.
 
-: Discord usernames can be changed, so we cannot rely on usernames/discriminators
-
-We can still rely on user IDs. Mine looks like this: `83386293446246400`
-
-So we include it in the hostname: `$userID.bot.discord` or `$userID.user.discord`
+Mine looks like this: `83386293446246400`
 
 And convert the user ID to a [[https://en.wikipedia.org/wiki/Unique_local_address][unique local address]]:
 
