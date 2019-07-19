@@ -1,6 +1,6 @@
 Building bridges
 ... between IRC and Discord
-18:00 19 Jul 2019
+18:30 19 Jul 2019
 Tags: chatbot, irc, discord, bridges
 
 Qais Patankar
@@ -120,11 +120,16 @@ When they come online, we can simply (re)create the connection.
 
 Puppeting leads to the following challenges:
 
-- *nickname*normalization*: dealing with special characters in nicknames
-- *moderation*: how can irc ops moderate Discord users without Discord permissions?
-- *discord*webhook*management*: making it look pretty on Discord too
-- *nickalert/mentions*conversion*: how do we ping a Discord user?
-- *converting*between*text*formats*: Markdown and IRC control codes
+- *nickname*normalization*
+- *moderation*
+- *discord*webhook*management*
+
+: nickname normalisation: dealing with special characters in nicknames
+: moderation: how can irc ops moderate Discord users without Discord permissions?
+: making it look pretty on Discord too
+
+- *nickalert/mentions*conversion*: how do we ping a discord user?
+- *converting*between*text*formats*: markdown and IRC control codes
 - *priviliged*channel*access*: discord users should not be in every bridged channel
 
 .caption During this talk we'll only be discussing the first three challenges. Feel free to ask me about the others!
@@ -233,18 +238,19 @@ And convert the user ID to a [[https://en.wikipedia.org/wiki/Unique_local_addres
 .caption User IDs use the `snowflake` format. It's out of scope for this talk, but they were [[https://github.com/twitter-archive/snowflake/tree/snowflake-2010][created by Twitter]] and are [[https://discordapp.com/developers/docs/reference#snowflakes][pretty cool]].
 
 * Discord
-: So we've been talking a lot of about IRC. 
-
+: So we've been talking a lot of about IRC, but lets talk about Discord
 .image building-bridges/img/discord-to-irc.png 300 _
-.caption Messages on Discord show up on IRC.
+.caption Messages on Discord (bottom) show up on IRC (top).
 
 What about the other direction?
 
 * Webhooks!
 
-Discord allows you to create bots, but only using their bot API.
+We can't create puppet accounts, we can only use the bot API.
+
+But we can use webhooks!
  
-It's against their Terms of Service to automate regular user accounts. So we need to instead make use of webhooks to send messages _as_other_users_.
+: It's against their Terms of Service to automate regular user accounts. So we need to instead make use of webhooks to send messages _as_other_users_. This is very different to IRC bots.
 
 : It's fairly straightforward: when the bridge is started we create a webhook per-channel, and then assign the `username`, `content` and `avatar` fields.
 
